@@ -33,15 +33,10 @@ def clean_text(text):
     text = re.sub(r'\w*\d\w*', '', text)
     return text
 
-
 def similarity(a, b):
-    """Returns a 0-1 score of how similar two headlines are."""
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
-
-
 def search_news_api(query, api_key):
-    """Searches NewsData.io for real articles matching the headline."""
     url = "https://newsdata.io/api/1/latest"
     params = {
         "apikey": api_key,
@@ -68,11 +63,6 @@ def search_news_api(query, api_key):
 
 
 def get_live_verdict(headline, api_key):
-    """
-    Checks live news sources and returns:
-      ("REAL", best_match_articles, best_score)   -> strong match found
-      ("NO_MATCH", [], 0)                         -> nothing relevant found
-    """
     articles = search_news_api(headline[:150], api_key)
     if not articles:
         return "NO_MATCH", [], 0
@@ -97,20 +87,12 @@ def get_live_verdict(headline, api_key):
 
 
 st.sidebar.header("Settings")
-st.sidebar.markdown(
-    "Get a free API key from [newsdata.io](https://newsdata.io/register) "
-    "to enable **live** verification (works after deployment too, not just "
-    "on your own computer). Without a key, the app falls back to the "
-    "trained ML model only."
-)
+st.sidebar.markdown()
 api_key = st.sidebar.text_input("NewsData.io API Key", type="password",
                                  value=os.environ.get("NEWSDATA_KEY", ""))
 
 if model is None:
-    st.error(
-        "ML backup model files not found. Please run `train_model.py` first to generate "
-        "`fake_news_model.pkl` and `tfidf_vectorizer.pkl`, then place them in this folder."
-    )
+    st.error()
     st.stop()
 
 
@@ -185,14 +167,7 @@ if check_button:
 
         with st.expander("See ML model's independent opinion"):
             st.write(f"Style-based prediction: **{ml_label}** ({ml_confidence:.1f}% confidence)")
-            st.caption(
-                "This is based purely on writing patterns learned from ~40,000 historical "
-                "labeled articles — it does not check if this is currently in the news."
-            )
+            st.caption()
 
 st.divider()
-st.caption(
-    "How it decides: live NewsData.io results are checked first (primary signal). "
-    "If nothing relevant is found online, the app falls back to the trained "
-    "TF-IDF + Logistic Regression model (secondary signal)."
-)
+st.caption()
