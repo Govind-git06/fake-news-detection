@@ -1,39 +1,3 @@
-"""
-app.py
--------
-Streamlit web app for Fake News Detection — REAL-TIME VERSION.
-
-This version treats live internet verification as the PRIMARY signal,
-and the trained ML model as a BACKUP signal:
-
-1. LIVE CHECK (primary)  -> Ask NewsData.io: "is any real news outlet
-   currently reporting something matching this headline?"
-   If yes, with high similarity -> we trust that as REAL.
-   NewsData.io's free tier (unlike NewsAPI.org) explicitly allows
-   requests from a deployed/public domain, not just localhost —
-   so this version keeps working after you deploy it.
-
-2. ML MODEL (backup)     -> If nothing is found online (too old, too new,
-   or outside the free tier's coverage), fall back to the trained
-   TF-IDF + Logistic Regression model, which judges based on writing
-   STYLE learned from thousands of past real/fake articles.
-
-3. FINAL VERDICT          -> Combines both into one clear answer, and
-   always tells the user WHICH method the verdict came from, so it's
-   honest about its own confidence.
-
-The interface is organized into tabs: Check News, How It Works,
-Model Stats (real numbers loaded from model_metrics.json, produced by
-train_model.py — never hardcoded), and About.
-
-RUN LOCALLY:
-    streamlit run app.py
-
-DEPLOY:
-    Push to GitHub -> deploy on https://share.streamlit.io
-    Add NEWSDATA_KEY under Secrets.
-"""
-
 import streamlit as st
 import pickle
 import re
@@ -43,18 +7,11 @@ import json
 import requests
 from difflib import SequenceMatcher
 
-# ---------------------------------------------------------
-# Page setup
-# ---------------------------------------------------------
 st.set_page_config(page_title="Fake News Detector", page_icon="📰", layout="centered")
 
 st.title("📰 Fake News Detection")
 st.caption("Live News API verification + TF-IDF/Logistic Regression backup model — IBM PBEL Project")
 
-
-# ---------------------------------------------------------
-# Load the trained ML model (cached so it only loads once)
-# ---------------------------------------------------------
 @st.cache_resource
 def load_model():
     try:
@@ -98,10 +55,6 @@ def similarity(a, b):
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 
-# ---------------------------------------------------------
-# Live News API check (NewsData.io — production/public-domain safe
-# on its free tier, unlike NewsAPI.org which is localhost-only)
-# ---------------------------------------------------------
 def search_news_api(query, api_key):
     """Searches NewsData.io for real articles matching the headline."""
     url = "https://newsdata.io/api/1/latest"
@@ -156,9 +109,6 @@ def get_live_verdict(headline, api_key):
         return "NO_MATCH", [], best_score
 
 
-# ---------------------------------------------------------
-# Sidebar: API key (built-in via Secrets, with manual override)
-# ---------------------------------------------------------
 st.sidebar.header("Settings")
 
 
@@ -193,16 +143,12 @@ if model is None:
     )
     st.stop()
 
-# ---------------------------------------------------------
-# Tabs
-# ---------------------------------------------------------
+
 tab_check, tab_how, tab_stats, tab_about = st.tabs(
     ["🔍 Check News", "⚙️ How It Works", "📊 Model Stats", "ℹ️ About"]
 )
 
-# ===========================================================
-# TAB 1: Check News
-# ===========================================================
+
 with tab_check:
     news_text = st.text_area(
         "Paste a news headline or article:",
@@ -223,19 +169,18 @@ with tab_check:
         else:
             live_status, live_articles, live_score = ("SKIPPED", [], 0)
 
-            # --- Step 1: Try live verification first ---
             if api_key:
                 with st.spinner("Checking live news sources..."):
                     live_status, live_articles, live_score = get_live_verdict(news_text, api_key)
 
-            # --- Step 2: ML model prediction (always computed, used as backup) ---
+   
             cleaned = clean_text(news_text)
             vec = vectorizer.transform([cleaned])
             ml_prediction = model.predict(vec)[0]
             ml_confidence = model.predict_proba(vec).max() * 100
             ml_label = "REAL" if ml_prediction == 1 else "FAKE"
 
-            # --- Step 3: Combine into a final verdict ---
+          
             st.subheader("✅ Final Verdict")
 
             if live_status == "REAL":
@@ -253,14 +198,13 @@ with tab_check:
                     st.success(f"**Backup Model says REAL** — confidence: {ml_confidence:.1f}%")
                 else:
                     st.error(f"**Backup Model says FAKE** — confidence: {ml_confidence:.1f}%")
-            else:  # SKIPPED - no API key entered
+            else:  
                 st.info("No NewsData.io key entered — using ML model only (no live check performed).")
                 if ml_label == "REAL":
                     st.success(f"**Model Prediction: REAL** — confidence: {ml_confidence:.1f}%")
                 else:
                     st.error(f"**Model Prediction: FAKE** — confidence: {ml_confidence:.1f}%")
 
-            # --- Step 4: Show supporting evidence ---
             if live_articles:
                 st.subheader("🌐 Matching Live Articles")
                 for a in live_articles:
@@ -284,9 +228,7 @@ with tab_check:
         "TF-IDF + Logistic Regression model (secondary signal)."
     )
 
-# ===========================================================
-# TAB 2: How It Works
-# ===========================================================
+
 with tab_how:
     st.subheader("⚙️ How the Detection Works")
 
@@ -328,9 +270,7 @@ This app makes a decision in **two layers**, and always tells you which one prod
         "judges writing style — not real-world truth. Together they cover each other's blind spots."
     )
 
-# ===========================================================
-# TAB 3: Model Stats
-# ===========================================================
+
 with tab_stats:
     st.subheader("📊 Model Performance")
 
@@ -361,9 +301,7 @@ with tab_stats:
             "you run `train_model.py`. Older model versions won't have it — retrain to see stats here."
         )
 
-# ===========================================================
-# TAB 4: About
-# ===========================================================
+
 with tab_about:
     st.subheader("ℹ️ About This Project")
     st.markdown("""
