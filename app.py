@@ -87,7 +87,12 @@ def get_live_verdict(headline, api_key):
 
 
 st.sidebar.header("Settings")
-st.sidebar.markdown()
+st.sidebar.markdown(
+    "Get a free API key from [newsdata.io](https://newsdata.io/register) "
+    "to enable **live** verification (works after deployment too, not just "
+    "on your own computer). Without a key, the app falls back to the "
+    "trained ML model only."
+)
 api_key = st.sidebar.text_input("NewsData.io API Key", type="password",
                                  value=os.environ.get("NEWSDATA_KEY", ""))
 
