@@ -1,0 +1,11 @@
+{
+  "accuracy": 98.29,
+  "precision": 97.99,
+  "recall": 98.41,
+  "f1_score": 98.2,
+  "total_articles": 44898,
+  "fake_articles": 23481,
+  "real_articles": 21417,
+  "training_samples": 35918,
+  "testing_samples": 8980
+}
