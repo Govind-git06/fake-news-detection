@@ -8,7 +8,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 
 def clean_text(text):
-    """Removes punctuation, links, numbers, and noise from text."""
     text = str(text).lower()
     text = re.sub(r'\[.*?\]', '', text)
     text = re.sub(r'https?://\S+|www\.\S+', '', text)
@@ -17,7 +16,6 @@ def clean_text(text):
     text = re.sub(r'\n', ' ', text)
     text = re.sub(r'\w*\d\w*', '', text)
     return text
-
 
 def main():
     print("Loading data...")
