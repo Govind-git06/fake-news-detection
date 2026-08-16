@@ -1,19 +1,3 @@
-"""
-train_model.py
-----------------
-Trains the Fake News Detection model and saves it to disk so the
-Streamlit app (app.py) can load it instantly without retraining
-every time someone opens the app.
-
-HOW TO RUN:
-1. Download "Fake.csv" and "True.csv" from the Kaggle dataset:
-   "Fake and Real News Dataset"
-2. Put both files in this same folder
-3. Run:  python train_model.py
-4. This creates two files: fake_news_model.pkl and tfidf_vectorizer.pkl
-   -> Upload BOTH of these to your GitHub repo along with app.py
-"""
-
 import pandas as pd
 import re
 import string
@@ -79,8 +63,7 @@ def main():
     with open("tfidf_vectorizer.pkl", "wb") as f:
         pickle.dump(vectorizer, f)
 
-    # Save real training stats so the Streamlit app can display genuine
-    # numbers instead of a hardcoded/fake accuracy figure.
+   
     metrics = {
         "accuracy": round(acc * 100, 2),
         "precision": round(precision * 100, 2),
