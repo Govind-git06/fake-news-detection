@@ -1,5 +1,3 @@
-
-
 import streamlit as st
 import pickle
 import re
@@ -8,13 +6,10 @@ import os
 import requests
 from difflib import SequenceMatcher
 
-
 st.set_page_config(page_title="Fake News Detector", page_icon="📰", layout="centered")
 
 st.title("📰 Fake News Detection")
 st.caption("Live News API verification + TF-IDF/Logistic Regression backup model — IBM PBEL Project")
-
-
 
 def load_model():
     try:
@@ -26,9 +21,7 @@ def load_model():
     except FileNotFoundError:
         return None, None
 
-
 model, vectorizer = load_model()
-
 
 def clean_text(text):
     text = str(text).lower()
