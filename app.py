@@ -1,35 +1,3 @@
-"""
-app.py
--------
-Streamlit web app for Fake News Detection — REAL-TIME VERSION.
-
-This version treats live internet verification as the PRIMARY signal,
-and the trained ML model as a BACKUP signal:
-
-1. LIVE CHECK (primary)  -> Ask NewsData.io: "is any real news outlet
-   currently reporting something matching this headline?"
-   If yes, with high similarity -> we trust that as REAL.
-   NewsData.io's free tier (unlike NewsAPI.org) explicitly allows
-   requests from a deployed/public domain, not just localhost —
-   so this version keeps working after you deploy it.
-
-2. ML MODEL (backup)     -> If nothing is found online (too old, too new,
-   or outside the free tier's coverage), fall back to the trained
-   TF-IDF + Logistic Regression model, which judges based on writing
-   STYLE learned from thousands of past real/fake articles.
-
-3. FINAL VERDICT          -> Combines both into one clear answer, and
-   always tells the user WHICH method the verdict came from, so it's
-   honest about its own confidence.
-
-RUN LOCALLY:
-    streamlit run app.py
-
-DEPLOY:
-    Push to GitHub -> deploy on https://share.streamlit.io
-    Add NEWSDATA_KEY under Secrets.
-"""
-
 import streamlit as st
 import pickle
 import re
@@ -38,18 +6,12 @@ import os
 import requests
 from difflib import SequenceMatcher
 
-# ---------------------------------------------------------
-# Page setup
-# ---------------------------------------------------------
 st.set_page_config(page_title="Fake News Detector", page_icon="📰", layout="centered")
 
 st.title("📰 Fake News Detection")
 st.caption("Live News API verification + TF-IDF/Logistic Regression backup model — IBM PBEL Project")
 
 
-# ---------------------------------------------------------
-# Load the trained ML model (cached so it only loads once)
-# ---------------------------------------------------------
 @st.cache_resource
 def load_model():
     try:
@@ -81,10 +43,6 @@ def similarity(a, b):
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 
-# ---------------------------------------------------------
-# Live News API check (NewsData.io — production/public-domain safe
-# on its free tier, unlike NewsAPI.org which is localhost-only)
-# ---------------------------------------------------------
 def search_news_api(query, api_key):
     """Searches NewsData.io for real articles matching the headline."""
     url = "https://newsdata.io/api/1/latest"
@@ -98,8 +56,7 @@ def search_news_api(query, api_key):
         data = response.json()
         if data.get("status") == "success":
             raw_articles = data.get("results", [])
-            # Normalize field names so the rest of the app doesn't care
-            # which API produced them (title/url/source stay consistent).
+           
             normalized = []
             for a in raw_articles:
                 normalized.append({
@@ -141,9 +98,6 @@ def get_live_verdict(headline, api_key):
         return "NO_MATCH", [], best_score
 
 
-# ---------------------------------------------------------
-# Sidebar: API key (built-in via Secrets, with manual override)
-# ---------------------------------------------------------
 st.sidebar.header("Settings")
 
 
@@ -177,9 +131,7 @@ if model is None:
     )
     st.stop()
 
-# ---------------------------------------------------------
-# Main input
-# ---------------------------------------------------------
+
 news_text = st.text_area(
     "Paste a news headline or article:",
     height=150,
@@ -199,19 +151,16 @@ if check_button:
     else:
         live_status, live_articles, live_score = ("SKIPPED", [], 0)
 
-        # --- Step 1: Try live verification first ---
         if api_key:
             with st.spinner("Checking live news sources..."):
                 live_status, live_articles, live_score = get_live_verdict(news_text, api_key)
 
-        # --- Step 2: ML model prediction (always computed, used as backup) ---
         cleaned = clean_text(news_text)
         vec = vectorizer.transform([cleaned])
         ml_prediction = model.predict(vec)[0]
         ml_confidence = model.predict_proba(vec).max() * 100
         ml_label = "REAL" if ml_prediction == 1 else "FAKE"
 
-        # --- Step 3: Combine into a final verdict ---
         st.subheader("✅ Final Verdict")
 
         if live_status == "REAL":
@@ -232,7 +181,7 @@ if check_button:
             else:
                 st.error(f"**Backup Model says FAKE** — confidence: {ml_confidence:.1f}%")
             verdict_source = "ml_backup"
-        else:  # SKIPPED - no API key entered
+        else: 
             st.info("No NewsData.io key entered — using ML model only (no live check performed).")
             if ml_label == "REAL":
                 st.success(f"**Model Prediction: REAL** — confidence: {ml_confidence:.1f}%")
@@ -240,7 +189,6 @@ if check_button:
                 st.error(f"**Model Prediction: FAKE** — confidence: {ml_confidence:.1f}%")
             verdict_source = "ml_only"
 
-        # --- Step 4: Show supporting evidence ---
         if live_articles:
             st.subheader("🌐 Matching Live Articles")
             for a in live_articles:
